@@ -24,7 +24,7 @@
       "^.+\\.tsx?$": "ts-jest"
     },
     "testMatch": [
-      "**/*.test.ts"
+      "**/*test.ts"
     ],
     "coverageThreshold": {
       "global": {
