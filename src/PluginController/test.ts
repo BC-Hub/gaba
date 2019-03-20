@@ -11,14 +11,18 @@ describe('PluginController', () => {
 
 	it('should allow adding a new plugin by script', () => {
     const controller = new PluginController();
-    const pluginName = 'foo'
+    const pluginName = 'Foo'
 
     controller.addPlugin({
       pluginName,
+      requiredPermissions: [],
       source: samplePluginSrc,
     });
 
 		expect(controller.state).toEqual({ plugins: [{ pluginName, source: samplePluginSrc }] });
 	});
 
+
+
 });
+

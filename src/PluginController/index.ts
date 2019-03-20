@@ -1,68 +1,48 @@
 import BaseController, { BaseConfig, BaseState } from '../BaseController';
-
-/**
- * @type Plugin
- *
- * Plugin representation
- *
- * @property name - Nickname associated with this plugin. 
- * @property source - The source code of the plugin.
- */
-export interface Plugin {
-	pluginName: string;
-	source: string;
-}
-
-/**
- * @type AddressBookState
- *
- * Address book controller state
- *
- * @property addressBook - Array of contact entry objects
- */
-export interface AddressBookState extends BaseState {
-	addressBook: Plugin[];
-}
+import { PluginOpts, PluginState, Plugin } from './Plugin';
+const { SES } = require('ses')
 
 /**
  * Controller that manages a list of recipient addresses associated with nicknames
  */
-export class AddressBookController extends BaseController<BaseConfig, AddressBookState> {
-	private addressBook = new Map<string, Plugin>();
+export class PluginController extends BaseController<BaseConfig, PluginState> {
+	private plugins = new Map<string, Plugin>();
 
 	/**
 	 * Name of this controller used during composition
 	 */
-	name = 'AddressBookController';
+	name = 'PluginController';
 
 	/**
-	 * Creates an AddressBookController instance
+	 * Creates an PluginController instance
 	 *
 	 * @param config - Initial options used to configure this controller
 	 * @param state - Initial state to set on this controller
 	 */
-	constructor(config?: Partial<BaseConfig>, state?: Partial<AddressBookState>) {
+	constructor(config?: Partial<BaseConfig>, state?: Partial<PluginState>) {
 		super(config, state);
-		this.defaultState = { addressBook: [] };
-		this.initialize();
+		this.defaultState = { serializedPlugins: [] };
+    this.rootRealm = SES.makeSESRootRealm({});
+    this.initialize();
 	}
 
 	/**
-	 * Remove all contract entries
+	 * Remove all plugin entries
 	 */
 	clear() {
-		this.addressBook.clear();
-		this.update({ addressBook: Array.from(this.addressBook.values()) });
+		this.serializedPlugins.clear();
+		this.update({ serializedPlugins: Array.from(this.serializedPlugins.values()) });
 	}
 
 	/**
-	 * Remove a contract entry by address
+	 * Remove a plugin entry by address
 	 *
 	 * @param address - Recipient address to delete
 	 */
-	delete(address: string) {
-		this.addressBook.delete(address);
-		this.update({ addressBook: Array.from(this.addressBook.values()) });
+	delete(pluginName: string) {
+    this.serializedPlugins.delete(pluginName);
+    this.plugins.delete(pluginName)
+		this.update({ serializedPlugins: Array.from(this.serializedPlugins.values()) });
 	}
 
 	/**
@@ -71,10 +51,13 @@ export class AddressBookController extends BaseController<BaseConfig, AddressBoo
 	 * @param address - Recipient address to add or update
 	 * @param name - Nickname to associate with this address
 	 */
-	set(address: string, name: string) {
-		this.addressBook.set(address, { address, name });
-		this.update({ addressBook: Array.from(this.addressBook.values()) });
+  addPlugin(pluginOpts: PluginOpts) {
+    const { pluginName } = pluginOpts
+    this.serializedPlugins.set(pluginName, pluginOpts);
+    this.update({ serializedPlugins: Array.from(this.serializedPlugins.values()) });
+    const plugin = new Plugin(pluginOpts)
+    this.plugins.set(pluginName, plugin)
 	}
 }
 
-export default AddressBookController;
+export default PluginController;
